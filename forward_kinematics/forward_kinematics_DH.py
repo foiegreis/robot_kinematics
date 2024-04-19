@@ -1,13 +1,26 @@
-'''
-Code to compute the Forward Kinematics of a robot with n joints, knowing the DH parameters of each joint
-github @foiegreis
-'''
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+FORWARD KINEMATICS - DENAVIT HARTENBERG APPROACH
+Code to compute the DH Forward Kinematics of a robot with n joints, knowing the DH parameters of each joint
+
+#Author: foiegreis
+#Date Created: april 2024
+
+"""
 
 import numpy as np
 
 
-def dh_to_T(alpha=None, a=None, d=None, phi=None):
-    """Returns Link Transformation Matrix given DH parameters joint i-1 - joint i - alpha and phi expressed in radians"""
+def dh_to_htm(alpha=None, a=None, d=None, phi=None):
+    """
+    Produces the Homogeneous Transformation Matrix corresponding to the Denavit-Hartenberg parameters (alpha, a, d, phi)
+    :param alpha: rad
+    :param a: float
+    :param d: float
+    :param phi: rad
+    :return: 4x4 homogeneous transformation matrix
+    """
 
     T = np.array([[np.cos(phi), -np.sin(phi)*np.cos(alpha), np.sin(phi)*np.sin(alpha), a*np.cos(phi)],
                   [np.sin(phi), np.cos(phi)*np.cos(alpha), -np.cos(phi) * np.sin(alpha), a * np.sin(phi)],
@@ -17,34 +30,29 @@ def dh_to_T(alpha=None, a=None, d=None, phi=None):
 
 
 def near_zero(z):
-    """Determines whether a scalar is small enough to be treated as zero"""
-    return abs(z) < 1e-5
+    """
+    Determines whether a scalar is zero
+    :param z: scalar
+    :return: bool
+    """
+    return abs(z) < 1e-6
 
 
-def forward_kinematics(list_T):
-    """Computes Forward Kinematics given the list of HTM"""
+def forward_kinematics_dh(dh_table):
+    """
+    Computes the Forward Kinematics given the DH Table of Denavit Hartenberg Parameters
+    :param dh_table: n x 4 np.ndarray
+    :return: 4x4 homogeneous transformation matrix
+    """
 
-    fk = list_T[0]
-    for T in list_T[1:]:
-        fk = np.matmul(fk, T)
-    res = np.where(near_zero(fk), 0, fk)
-    return res
+    fk = np.eye(4)
 
-
-def compute_fk(dh):
-    """Given DH Parameters Table returns Forward Kinematics"""
-
-    t_matrices = []
-    n = len(dh)
-
-    for joint in dh:
-        print(joint)
+    for joint in dh_table:
         alpha, a, d, phi = joint
-        tj = dh_to_T(alpha, a, d, phi)
-        t_matrices.append(tj)
+        tj = dh_to_htm(alpha, a, d, phi)
+        fk = np.matmul(fk, tj)
 
-    res = forward_kinematics(t_matrices)
-    print(f"Forward Kinematics = T0{n} =\n{res}")
+    res = np.where(near_zero(fk), 0, np.round(fk, 3))
     return res
 
 
@@ -53,14 +61,27 @@ if __name__ == "__main__":
     # Known joint configuration θ1-θ6
     theta = [0.7854, -0.7854, 0.7854, -1.5708, -1.5708, 0.7854]
 
-    # DH Parameters Table
-    dh = np.array([[np.pi / 2, 0, 0.089, -theta[0] - np.pi / 2],
-                   [0, -0.425, 0, theta[1]],
-                   [0, -0.3922, 0, theta[2]],
-                   [np.pi / 2, 0, 0.109, theta[3]],
-                   [-np.pi / 2, 0, 0.0947, theta[4]],
-                   [0, 0, 0.0823, theta[5]]])
+    # UR5e specifications
+    W1 = 0.109
+    W2 = 0.082
+    L1 = 0.425
+    L2 = 0.392
+    H1 = 0.089
+    H2 = 0.095
 
-    compute_fk(dh)
+    # DH Parameters Table
+    dh_table = np.array([[np.pi / 2, 0, H1, -theta[0] - np.pi / 2],
+                         [0, -L1, 0, theta[1]],
+                         [0, -L2, 0, theta[2]],
+                         [np.pi / 2, 0, W1, theta[3]],
+                         [-np.pi / 2, 0, H2, theta[4]],
+                         [0, 0, W2, theta[5]]])
+
+    # FORWARD KINEMATICS applying DH
+    fk_dh = forward_kinematics_dh(dh_table)
+
+    print("Example: UR5e 6dof robot arm")
+    print(f"\nDh Parameters: \n{dh_table}")
+    print(f"\nForward Kinematics T0{dh_table.shape[0]} applying DH for the configuration {theta}: \n{fk_dh}")
 
 
