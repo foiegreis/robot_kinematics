@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-FORWARD KINEMATICS - PRODUCT OF EXPONENTIALS APPROACH
-Code to compute the PoE Forward Kinematics of a robot with n joints, given the table of Space Form or Body Form twists
+FORWARD KINEMATICS of UR5e - PRODUCT OF EXPONENTIALS APPROACH
+Code to compute the PoE Forward Kinematics of 6 dof UR5e, given the table of Space Form or Body Form twists
 and M matrix
 
 #Author: foiegreis
@@ -146,18 +146,41 @@ def forward_kinematics_body(M, b_list, theta_list):
 
 if __name__ == "__main__":
 
-    # Known joint configuration
-    theta = []
+    # UR5e
+    # Known joint configuration θ1-θ6
+    theta = [0.7854, -0.7854, 0.7854, -1.5708, -1.5708, 0.7854]
+
+    # UR5e specifications
+    W1 = 0.109
+    W2 = 0.082
+    L1 = 0.425
+    L2 = 0.392
+    H1 = 0.089
+    H2 = 0.095
 
     # M Matrix in Home Configuration
-    M = np.array([])
+    M = np.array([[-1, 0, 0, (L1 + L2)],
+                  [0, 0, 1, (W1 + W2)],
+                  [0, 1, 0, (H1 - H2)],
+                  [0, 0, 0, 1]])
 
     # Screw Axes in Space form
-    s_list = np.array([])
+    s_list = np.array([[0, 0, 1, 0, 0, 0],
+                       [0, 1, 0, -H1, 0, 0],
+                       [0, 1, 0, -H1, 0, L1],
+                       [0, 1, 0, -H1, 0, (L1 + L2)],
+                       [0, 0, -1, -W1, (L1+L2), 0],
+                       [0, 1, 0, (H2-H1), 0, (L1+L2)]])
 
     # Screw Axes in Body form
-    b_list = np.array([])
+    b_list = np.array([[0, 1, 0, W1 + W2, 0, L1 + L2],
+                       [0, 0, 1, H2, L1 + L2, 0],
+                       [0, 0, 1, H2, L2, 0],
+                       [0, 0, 1, H2, 0, 0],
+                       [0, -1, 0, -W2, 0, 0],
+                       [0, 0, 1, 0, 0, 0]])
 
+    print("UR5e 6dof robot arm")
     # FORWARD KINEMATICS applying PoE SPACE FORM
     fk_s = forward_kinematics_space(M, s_list, theta)
     print(f"\nForward Kinematics T0{s_list.shape[0]} applying PoE Space Form for the configuration {theta}: \n{fk_s}")
