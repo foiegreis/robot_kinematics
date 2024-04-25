@@ -1,6 +1,15 @@
-import modern_robotics as mr
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+INVERSE NUMERICAL KINEMATICS of UR5e ROBOT - PRODUCT OF EXPONENTIALS APPROACH WITH NEWTON-RAPHSON METHOD
+Code to compute the PoE Inverse Kinematics of 6dof UR5e robot, applying the Newton Raphson root-finding method
+
+#Author: foiegreis
+#Date Created: april 2024
+
+"""
+
 import numpy as np
-import scipy
 
 
 def near_zero(z):
@@ -18,6 +27,7 @@ def axis_angle(p):
     :return: axis-angle representation (omega, theta)
     """
     return p / np.linalg.norm(p), np.linalg.norm(p)
+
 
 def vec3_to_skew3(p):
     """
@@ -43,6 +53,7 @@ def vec6_to_skew4(s):
     twist_sk = np.r_[np.c_[p_sk, v.reshape(3, 1)],[[0, 0, 0, 0]]]
     return twist_sk
 
+
 def skew3_to_vec3(p_skew):
     """Returns the 3D vector of a 3x3 Skew Symmetric Matrix
     :param p: [p] = skew symmetric matrix
@@ -50,6 +61,7 @@ def skew3_to_vec3(p_skew):
     """
     p = np.r_[[p_skew[2][1], p_skew[0][2], p_skew[1][0]]]
     return p
+
 
 def skew4_to_vec6(s_skew):
     """Returns the 6D vector of a 4x4 Skew Symmetric Matrix
@@ -126,13 +138,13 @@ def skew4_to_matrix_exp4(s_sk):
     # Case Prismatic Joint:
     if near_zero(np.linalg.norm(omegatheta)):
         # return [[I, v*theta], [0, 1]]
-        return np.r_[np.c_[np.eye(3), omegatheta_sk], [[0, 0, 0, 1]]]
+        return np.r_[np.c_[np.eye(3), vtheta], [[0, 0, 0, 1]]]
 
     # Case Revolute Joint
     else:
         # return [[e^[omega]theta, G(theta)v],[0, 1]]
         theta = axis_angle(omegatheta)[1]
-        omega_sk = omegatheta_sk /theta
+        omega_sk = omegatheta_sk / theta
         matexp3 = skew3_to_matrix_exp3(omegatheta_sk)
         G = np.eye(3)*theta + (1 - np.cos(theta))*omega_sk + (theta - np.sin(theta)) * np.dot(omega_sk, omega_sk)
         v = np.dot(G, vtheta)/theta
@@ -278,8 +290,8 @@ def jacobian_space(s_list, theta_list):
     T = np.eye(4)
     for i in range(1, len(theta_list)):
 
-        s = s_list[i + 1, :]
-        s_skew = vec6_to_skew4(s * theta_list[i + 1])
+        s = s_list[i - 1, :]
+        s_skew = vec6_to_skew4(s * theta_list[i - 1])
         mat_exp = skew4_to_matrix_exp4(s_skew)
         T = np.dot(T, mat_exp)
 
@@ -339,7 +351,8 @@ def IK_body(M, b_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
 
     return theta_list, not err
 
-def IKinSpace(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
+
+def IK_space(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
     """Computes the Inverse Kinematics in space form of an open chain robot
        :param M: 4x4 homogeneous transformation matrix of the home configuration
        :param s_list: nx6 matrix of the screw axes in space form
@@ -349,7 +362,6 @@ def IKinSpace(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
        :param e_v: error threshold on the linear velocity
        :return: IK = 1xn list of the joint configurations that places the end effector in T_sd
        """
-
 
     i = 0
     theta_list = np.array(theta_list_0).copy()
@@ -397,31 +409,60 @@ def IKinSpace(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
 
 
 if __name__ == "__main__":
-    # calculate inverse kinematics theta = (th1, th2, th3) that put 3R end effector to Tsd
-    # desired end effector pose
-    Tsd = np.array([[-0.585, -0.811, 0, 0.076],
-                   [0.811, -0.585, 0, 2.608],
-                   [0, 0, 1, 0],
-                   [0, 0, 0, 1]])
+    # UR5e
+    # Known joint configuration θ1-θ6
+    theta_0 = [np.pi/4, -np.pi/4, np.pi/4, -np.pi/4, -np.pi/4, np.pi/4]
 
-    thetalist0 = np.array([np.pi/4, np.pi/4, np.pi/4])  # initial guess
+    # UR5e specifications
+    W1 = 0.109
+    W2 = 0.082
+    L1 = 0.425
+    L2 = 0.392
+    H1 = 0.089
+    H2 = 0.095
 
-    eps_w = 0.001  # angular velocity threshold
-    eps_v = 0.0001 # linear velocity threshold
-
-    # screw axes in body form
-    B_list = np.array([[0, 0, 1, 0, 3, 0],
-                      [0, 0, 1, 0, 2, 0],
-                      [0, 0, 1, 0, 1, 0]])
-
-    # M matrix
-    M = np.array([[1, 0, 0, 3],
-                  [0, 1, 0, 0],
-                  [0, 0, 1, 0],
+    # M Matrix in Home Configuration
+    M = np.array([[-1, 0, 0, (L1 + L2)],
+                  [0, 0, 1, (W1 + W2)],
+                  [0, 1, 0, (H1 - H2)],
                   [0, 0, 0, 1]])
 
-    max_iterations = 3
+    # Screw Axes in Space form
+    s_list = np.array([[0, 0, 1, 0, 0, 0],
+                       [0, 1, 0, -H1, 0, 0],
+                       [0, 1, 0, -H1, 0, L1],
+                       [0, 1, 0, -H1, 0, (L1 + L2)],
+                       [0, 0, -1, -W1, (L1 + L2), 0],
+                       [0, 1, 0, (H2 - H1), 0, (L1 + L2)]])
 
-    [theta_list, success] = IK_body(M, B_list, Tsd, thetalist0, eps_w, eps_v, max_iterations)
-    print("theta list: ", theta_list)
-    print("success: ", success)
+    # Screw Axes in Body form
+    b_list = np.array([[0, 1, 0, W1 + W2, 0, L1 + L2],
+                       [0, 0, 1, H2, -L1 - L2, 0],
+                       [0, 0, 1, H2, -L2, 0],
+                       [0, 0, 1, H2, 0, 0],
+                       [0, -1, 0, -W2, 0, 0],
+                       [0, 0, 1, 0, 0, 0]])
+
+    # Desired end effector configuration
+    T_sd = np.array([[ 0, -1, 0, 0.4798],
+                     [-1, 0, 0, 0.6339],
+                     [ 0, 0, -1, 0.3075],
+                     [ 0, 0, 0, 1]])
+
+    theta_d = [0.7854, -0.7854, 0.7854, -1.5708, -1.5708, 0.7854]
+
+    e_omega = 0.001
+    e_v = 0.0001
+
+    max_iterations = 20
+
+    print("UR5e 6dof robot arm")
+    # INVERSE KINEMATICS applying PoE BODY FORM
+    ik_s = IK_body(M, b_list, T_sd, theta_0, e_omega, e_v, max_iterations)
+    print(f"\nInverse kinematics in Space form: \n{ik_s}\n")
+
+    # INVERSE KINEMATICS applying PoE SPACE FORM
+    ik_s = IK_space(M, s_list, T_sd, theta_0, e_omega, e_v, max_iterations)
+    print(f"\nInverse kinematics in Space form: \n{ik_s}\n")
+
+    print("Expected result: ", theta_d)

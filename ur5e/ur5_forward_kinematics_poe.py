@@ -143,7 +143,7 @@ def skew4_to_matrix_exp4(s_sk):
     else:
         # return [[e^[omega]theta, G(theta)v],[0, 1]]
         theta = axis_angle(omegatheta)[1]
-        omega_sk = omegatheta_sk /theta
+        omega_sk = omegatheta_sk / theta
         matexp3 = skew3_to_matrix_exp3(omegatheta_sk)
         G = np.eye(3)*theta + (1 - np.cos(theta))*omega_sk + (theta - np.sin(theta)) * np.dot(omega_sk, omega_sk)
         v = np.dot(G, vtheta)/theta
@@ -162,6 +162,7 @@ def fk_body(M, b_list, theta_list):
     T = np.array(M)
     for i, b in enumerate(b_list):
         b_skew = vec6_to_skew4(np.array(b) * theta_list[i])
+        print("b_skew fk", b_skew)
         mat_exp = skew4_to_matrix_exp4(b_skew)
         T = np.dot(T, mat_exp)
 
