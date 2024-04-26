@@ -10,7 +10,7 @@ Code to compute the PoE Inverse Kinematics of a robot with n joints, applying th
 """
 
 import numpy as np
-
+import matplotlib.pyplot as plt
 
 def near_zero(z):
     """
@@ -409,7 +409,9 @@ def IK_space(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
 
 
 if __name__ == "__main__":
-    # calculate inverse kinematics theta = (th1, th2, th3) that put 3R end effector to Tsd
+
+    # EXAMPLE: calculate inverse kinematics theta = (th1, th2, th3) that put 3R end effector to Tsd
+
     # desired end effector pose
     Tsd = np.array([[-0.585, -0.811, 0, 0.076],
                    [0.811, -0.585, 0, 2.608],
@@ -419,12 +421,17 @@ if __name__ == "__main__":
     thetalist0 = np.array([np.pi/4, np.pi/4, np.pi/4])  # initial guess
 
     eps_w = 0.001  # angular velocity threshold
-    eps_v = 0.0001 # linear velocity threshold
+    eps_v = 0.0001  # linear velocity threshold
 
     # screw axes in body form
-    B_list = np.array([[0, 0, 1, 0, 3, 0],
+    b_list = np.array([[0, 0, 1, 0, 3, 0],
                       [0, 0, 1, 0, 2, 0],
                       [0, 0, 1, 0, 1, 0]])
+
+    # screw axes in space form
+    s_list = np.array([[0, 0, 1, 0, 0, 0],
+                       [0, 0, 1, 0, -1, 0],
+                       [0, 0, 1, 0, -2, 0]])
 
     # M matrix
     M = np.array([[1, 0, 0, 3],
@@ -432,8 +439,14 @@ if __name__ == "__main__":
                   [0, 0, 1, 0],
                   [0, 0, 0, 1]])
 
-    max_iterations = 3
+    max_iterations = 20
 
-    [theta_list, success] = IK_body(M, B_list, Tsd, thetalist0, eps_w, eps_v, max_iterations)
+    print("\nInverse Kinematics in Body Form of the 3R robot")
+    [theta_list, success] = IK_body(M, b_list, Tsd, thetalist0, eps_w, eps_v, max_iterations)
+    print("theta list: ", theta_list)
+    print("success: ", success)
+
+    print("\nInverse Kinematics in Space Form of the 3R robot")
+    [theta_list, success] = IK_space(M, s_list, Tsd, thetalist0, eps_w, eps_v, max_iterations)
     print("theta list: ", theta_list)
     print("success: ", success)

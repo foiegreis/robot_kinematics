@@ -457,12 +457,12 @@ if __name__ == "__main__":
     max_iterations = 20
 
     print("UR5e 6dof robot arm")
-    # INVERSE KINEMATICS applying PoE BODY FORM
-    ik_s = IK_body(M, b_list, T_sd, theta_0, e_omega, e_v, max_iterations)
-    print(f"\nInverse kinematics in Space form: \n{ik_s}\n")
-
     # INVERSE KINEMATICS applying PoE SPACE FORM
     ik_s = IK_space(M, s_list, T_sd, theta_0, e_omega, e_v, max_iterations)
     print(f"\nInverse kinematics in Space form: \n{ik_s}\n")
+
+    # INVERSE KINEMATICS applying PoE BODY FORM
+    ik_b = IK_body(M, b_list, T_sd, theta_0, e_omega, e_v, max_iterations)
+    print(f"\nInverse kinematics in Body form: \n{ik_b}\n")
 
     print("Expected result: ", theta_d)

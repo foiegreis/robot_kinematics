@@ -189,24 +189,33 @@ def fk_space(M, s_list, theta_list):
 
 if __name__ == "__main__":
 
+    # EXAMPLE: 3R Spatial Robot
+
     # Known joint configuration
-    theta = []
+    theta = [0.92519754, 0.58622516, 0.68427316]
 
-    # M Matrix in Home Configuration
-    M = np.array([])
+    # M matrix
+    M = np.array([[1, 0, 0, 3],
+                  [0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [0, 0, 0, 1]])
 
-    # Screw Axes in Space form
-    s_list = np.array([])
+    # screw axes in space form
+    s_list = np.array([[0, 0, 1, 0, 0, 0],
+                       [0, 0, 1, 0, -1, 0],
+                       [0, 0, 1, 0, -2, 0]])
 
-    # Screw Axes in Body form
-    b_list = np.array([])
+    # screw axes in body form
+    b_list = np.array([[0, 0, 1, 0, 3, 0],
+                       [0, 0, 1, 0, 2, 0],
+                       [0, 0, 1, 0, 1, 0]])
 
-    # FORWARD KINEMATICS applying PoE SPACE FORM
+    # FORWARD KINEMATICS applying PoE SPACE FORM of 3R robot
     fk_s = fk_space(M, s_list, theta)
-    print(f"\nForward Kinematics T0{s_list.shape[0]} applying PoE Space Form for the configuration {theta}: \n{fk_s}")
+    print(f"\nForward Kinematics of 3R robot T0{s_list.shape[0]} applying PoE Space Form for the configuration {theta}: \n{fk_s}")
 
     # FORWARD KINEMATICS applying PoE BODY FORM
     fk_b = fk_body(M, b_list, theta)
-    print(f"\nForward Kinematics T0{b_list.shape[0]} applying PoE Body Form for the configuration {theta}: \n{fk_b}")
+    print(f"\nForward Kinematics of 3R robot T0{b_list.shape[0]} applying PoE Body Form for the configuration {theta}: \n{fk_b}")
 
 
