@@ -409,6 +409,7 @@ def IK_space(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
 
 
 if __name__ == "__main__":
+
     # UR5e
     # Known joint configuration θ1-θ6
     theta_0 = [np.pi/4, -np.pi/4, np.pi/4, -np.pi/4, -np.pi/4, np.pi/4]

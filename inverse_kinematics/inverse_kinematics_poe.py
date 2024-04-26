@@ -410,7 +410,7 @@ def IK_space(M, s_list, T_sd, theta_list_0, e_omega, e_v, max_iterations=10):
 
 if __name__ == "__main__":
 
-    # EXAMPLE: calculate inverse kinematics theta = (th1, th2, th3) that put 3R end effector to Tsd
+    # EXAMPLE: 3R Spatial Robot
 
     # desired end effector pose
     Tsd = np.array([[-0.585, -0.811, 0, 0.076],
@@ -418,7 +418,8 @@ if __name__ == "__main__":
                    [0, 0, 1, 0],
                    [0, 0, 0, 1]])
 
-    thetalist0 = np.array([np.pi/4, np.pi/4, np.pi/4])  # initial guess
+    # initial guess
+    thetalist0 = np.array([np.pi/4, np.pi/4, np.pi/4])
 
     eps_w = 0.001  # angular velocity threshold
     eps_v = 0.0001  # linear velocity threshold
