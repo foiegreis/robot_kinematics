@@ -187,8 +187,8 @@ if __name__ == "__main__":
 
     # EXAMPLE: 3R Spatial Robot
 
-    # current configuration
-    thetalist = np.array([0, np.pi/4, 0])
+    # initial guess
+    thetalist = np.array([0, 0, 0])
 
     # screw axes in body form
     b_list = np.array([[0, 0, 1, 0, 3, 0],
@@ -198,15 +198,15 @@ if __name__ == "__main__":
     # screw axes in space form
     s_list = np.array([[0, 0, 1, 0, 0, 0],
                        [0, 0, 1, 0, -1, 0],
-                       [0, 0, 1, 0, -2, 0]])
+                       [0, 0, 1, -np.sin(np.pi/4), -1-np.cos(np.pi/4), 0]])
 
     print("\nSpace Jacobian the 3R robot")
     Js = jacobian_space(s_list, thetalist)
     print("Js: ", Js)
 
     print("\nBody Jacobian of the 3R robot")
-    Jb = jacobian_body(b_list, thetalist)
-    print("Jb: ", Jb)
+    #Jb = jacobian_body(b_list, thetalist)
+    #print("Jb: ", Jb)
 
     print("\nIs the Jacobian Singular?")
     singularity = is_singularity(Js)

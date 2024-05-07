@@ -1,9 +1,10 @@
+
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-GEOMETRIC JACOBIAN SPACE AND BODY FORM - PRODUCT OF EXPONENTIALS
-Code to compute the PoE Geometric Jacobian in Space and Body form, for a robot with n joints
-#Author: foiegreis
+STATICS - PRODUCT OF EXPONENTIALS
+Code to compute the Torques in Static equilibrium of a Robot, given the Screw Axes, the current Joint Configuration
+and the Wrenches vector
 #Date Created: april 2024
 
 """
@@ -179,35 +180,53 @@ def jacobian_space(s_list, theta_list):
         Js[:, i] = J_col
     return Js
 
+
 def is_singularity(J):
     """Evaluates if the Jacobian is at a singularity"""
     return np.linalg.matrix_rank(J) < min(np.shape(J))
 
-if __name__ == "__main__":
+def statics(J, F):
+    """Computes the statics equation of the joint torques given the Jacobian Matrix and the
+     Wrench of end-effector forces
+     param: J = jacobian matrix
+     param: F = wrench vector 6x1
+     returns: tau = joint forces vector n x 1
+     """
 
-    # EXAMPLE: 3R Spatial Robot
+    # planar case
+    if len(F) == 3:
+        J = J[2:5, :]
+
+    J_trans = np.transpose(J)
+    print(J_trans)
+    tau = np.dot(J_trans, F)
+    return tau
+
+
+if __name__ == "__main__":
+    # EXAMPLE: PRRRRP Planar Robot
 
     # current configuration
-    thetalist = np.array([0, np.pi/4, 0])
+    thetalist = np.array([0, 0, 0, 0, 0, 0])
 
-    # screw axes in body form
-    b_list = np.array([[0, 0, 1, 0, 3, 0],
-                      [0, 0, 1, 0, 2, 0],
-                      [0, 0, 1, 0, 1, 0]])
+    # wrench
+    wrench = np.array([0, 1, -1, 1, 0, 0])
 
     # screw axes in space form
-    s_list = np.array([[0, 0, 1, 0, 0, 0],
-                       [0, 0, 1, 0, -1, 0],
-                       [0, 0, 1, 0, -2, 0]])
+    s_list = np.array([[0, 0, 0, 0, 0, 1],
+                       [1, 0, 0, 0, 0, 0],
+                       [0, 0, 1, 1, 0, 0],
+                       [0, 0, 1, 1, 1, 0],
+                       [0.7071, -0.7071, 0, 0, 0, -0.7071],
+                       [0, 0, 0, 0, 1, 0]])
 
-    print("\nSpace Jacobian the 3R robot")
     Js = jacobian_space(s_list, thetalist)
-    print("Js: ", Js)
+    print(f"\nSpace Jacobian Js: \n{Js}")
 
-    print("\nBody Jacobian of the 3R robot")
-    Jb = jacobian_body(b_list, thetalist)
-    print("Jb: ", Jb)
-
-    print("\nIs the Jacobian Singular?")
     singularity = is_singularity(Js)
-    print(f"{'No' if not singularity else 'Yes'}")
+    print(f"\nIs the Jacobian Singular at the configuration {thetalist}? \n{'No' if not singularity else 'Yes'}")
+
+
+    tau = statics(Js, wrench)
+    print(f"\nStatics: joint torques and forces for the wrench {wrench}: \n{tau}")
+
